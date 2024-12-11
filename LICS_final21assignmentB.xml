@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+// Place global declarations here.
+chan scholarshipDecision , scholarshipApplyMerit, transcriptRequest, personalInfoRequest,
+loginRequest, loginResponse, logoutRequest , scholarshipApplyMCN, started;</declaration>
+	<template>
+		<name x="5" y="5">User</name>
+		<declaration>// Place local declarations here.
+</declaration>
+		<location id="id0" x="-110" y="8">
+			<name x="-120" y="-26">start</name>
+		</location>
+		<location id="id1" x="-238" y="8">
+			<name x="-248" y="-26">idle</name>
+		</location>
+		<init ref="id1"/>
+		<transition id="id2">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-220" y="42">logoutRequest?</label>
+			<nail x="-153" y="110"/>
+		</transition>
+		<transition id="id3">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-220" y="-9">started!</label>
+		</transition>
+	</template>
+	<template>
+		<name>TranscriptInfo</name>
+		<declaration>bool personalInfo ;
+bool transcript ;
+bool dataAvailable;</declaration>
+		<location id="id4" x="-926" y="-153">
+			<name x="-936" y="-187">Idle</name>
+		</location>
+		<location id="id5" x="-510" y="-153">
+			<name x="-520" y="-187">FetchingTranscript</name>
+		</location>
+		<location id="id6" x="-501" y="59">
+			<name x="-518" y="76">FetchingPersonalInfo</name>
+		</location>
+		<location id="id7" x="-926" y="59">
+			<name x="-951" y="76">DataResponse</name>
+		</location>
+		<init ref="id4"/>
+		<transition id="id8">
+			<source ref="id7"/>
+			<target ref="id4"/>
+			<label kind="assignment" x="-1105" y="-51">dataAvailable = false</label>
+		</transition>
+		<transition id="id9">
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-748" y="34">true</label>
+		</transition>
+		<transition id="id10">
+			<source ref="id5"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-663" y="-127">true</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id4"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-595" y="-34">personalInfoRequest?</label>
+			<label kind="assignment" x="-595" y="-17">dataAvailable = true</label>
+		</transition>
+		<transition id="id12">
+			<source ref="id4"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-816" y="-195">transcriptRequest?</label>
+			<label kind="assignment" x="-816" y="-178">dataAvailable = true</label>
+		</transition>
+	</template>
+	<template>
+		<name> ScholarshipComm</name>
+		<declaration>int meritCutoff = 9;
+int mcnCutoff = 8;
+int cgpa=8;
+bool scholarshipApplied;
+int scholarship_approved = 0;</declaration>
+		<location id="id13" x="-382" y="-85">
+			<name x="-392" y="-119">Idle</name>
+		</location>
+		<location id="id14" x="-170" y="-221">
+			<name x="-180" y="-255">EvaluatingMerit</name>
+		</location>
+		<location id="id15" x="-153" y="42">
+			<name x="-187" y="59">EvaluatingMCN</name>
+		</location>
+		<location id="id16" x="212" y="42">
+			<name x="238" y="34">Rejected</name>
+		</location>
+		<location id="id17" x="187" y="-221">
+			<name x="212" y="-238">Approved</name>
+		</location>
+		<init ref="id13"/>
+		<transition id="id18">
+			<source ref="id16"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-500" y="63">true</label>
+			<nail x="212" y="101"/>
+			<nail x="-518" y="93"/>
+			<nail x="-518" y="-85"/>
+		</transition>
+		<transition id="id19">
+			<source ref="id17"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-501" y="-281">true</label>
+			<nail x="187" y="-289"/>
+			<nail x="-518" y="-289"/>
+			<nail x="-518" y="-85"/>
+		</transition>
+		<transition id="id20">
+			<source ref="id13"/>
+			<target ref="id15"/>
+			<label kind="guard" x="-365" y="-51">true</label>
+			<label kind="synchronisation" x="-365" y="-34">scholarshipApplyMCN?</label>
+			<label kind="assignment" x="-364" y="-21">scholarshipApplied = true</label>
+		</transition>
+		<transition id="id21">
+			<source ref="id14"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-42" y="-280">cgpa &gt;=meritCutoff</label>
+			<label kind="synchronisation" x="-42" y="-263">scholarshipDecision!</label>
+			<label kind="assignment" x="-42" y="-246">scholarship_approved = 1</label>
+		</transition>
+		<transition id="id22">
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-68" y="51">cgpa &lt; mcnCutoff</label>
+			<label kind="synchronisation" x="-68" y="68">scholarshipDecision!</label>
+		</transition>
+		<transition id="id23">
+			<source ref="id15"/>
+			<target ref="id17"/>
+			<label kind="guard" x="102" y="-153">cgpa &gt;=mcnCutoff</label>
+			<label kind="synchronisation" x="102" y="-136">scholarshipDecision!</label>
+			<label kind="assignment" x="102" y="-119">scholarship_approved = 1</label>
+		</transition>
+		<transition id="id24">
+			<source ref="id14"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-204" y="-144">cgpa &lt; meritCutoff</label>
+			<label kind="synchronisation" x="-204" y="-127">scholarshipDecision!</label>
+		</transition>
+		<transition id="id25">
+			<source ref="id13"/>
+			<target ref="id14"/>
+			<label kind="guard" x="-408" y="-204">true</label>
+			<label kind="synchronisation" x="-408" y="-187">scholarshipApplyMerit?</label>
+			<label kind="assignment" x="-408" y="-170">scholarshipApplied = true</label>
+		</transition>
+	</template>
+	<template>
+		<name>CredentialChecker</name>
+		<declaration>int validEmail = 1;     // Placeholder for email ID check
+int validPassword = 123; // Placeholder for password check
+bool is_authenticated;
+int email=1;
+int password=123;</declaration>
+		<location id="id26" x="-510" y="17">
+			<name x="-553" y="34">Waiting</name>
+		</location>
+		<location id="id27" x="-510" y="-229">
+			<name x="-520" y="-263">Verifying</name>
+		</location>
+		<location id="id28" x="17" y="-238">
+			<name x="7" y="-272">Success</name>
+		</location>
+		<location id="id29" x="25" y="17">
+			<name x="15" y="-17">Failure</name>
+		</location>
+		<init ref="id26"/>
+		<transition id="id30">
+			<source ref="id29"/>
+			<target ref="id26"/>
+			<label kind="guard" x="-17" y="-221">true</label>
+		</transition>
+		<transition id="id31">
+			<source ref="id28"/>
+			<target ref="id26"/>
+			<label kind="guard" x="-34" y="25">true</label>
+		</transition>
+		<transition id="id32">
+			<source ref="id27"/>
+			<target ref="id28"/>
+			<label kind="guard" x="-357" y="-306">email == validEmail &amp;&amp; password == validPassword</label>
+			<label kind="synchronisation" x="-357" y="-289">loginResponse?</label>
+			<label kind="assignment" x="-357" y="-272">is_authenticated=true</label>
+		</transition>
+		<transition id="id33">
+			<source ref="id27"/>
+			<target ref="id29"/>
+			<label kind="guard" x="-153" y="-127">!(email == validEmail &amp;&amp; password == validPassword)</label>
+			<label kind="synchronisation" x="-153" y="-110">loginResponse?</label>
+			<label kind="assignment" x="-153" y="-93">is_authenticated = false</label>
+		</transition>
+		<transition id="id34">
+			<source ref="id26"/>
+			<target ref="id27"/>
+			<label kind="guard" x="-569" y="-144">true</label>
+			<label kind="synchronisation" x="-620" y="-127">loginRequest!</label>
+		</transition>
+	</template>
+	<template>
+		<name>Website</name>
+		<declaration>bool isScholarshipApplied;
+bool is_authenticated;</declaration>
+		<location id="id35" x="-1555" y="-144">
+			<name x="-1572" y="-127">START</name>
+		</location>
+		<location id="id36" x="-1394" y="-144">
+			<name x="-1404" y="-178">login</name>
+		</location>
+		<location id="id37" x="-1062" y="-144">
+			<name x="-1104" y="-178">homePage</name>
+		</location>
+		<location id="id38" x="-748" y="-357">
+			<name x="-758" y="-391">scholarship</name>
+		</location>
+		<location id="id39" x="-722" y="-161">
+			<name x="-705" y="-178">acadtranscript</name>
+		</location>
+		<location id="id40" x="-714" y="-34">
+			<name x="-697" y="-43">personalinfo</name>
+		</location>
+		<location id="id41" x="-748" y="93">
+			<name x="-731" y="84">logout</name>
+		</location>
+		<location id="id42" x="-323" y="-442">
+			<name x="-333" y="-476">Merit</name>
+		</location>
+		<location id="id43" x="-433" y="-238">
+			<name x="-443" y="-272">MCN</name>
+		</location>
+		<location id="id44" x="-1555" y="-272">
+			<name x="-1565" y="-306">Idle</name>
+		</location>
+		<init ref="id44"/>
+		<transition id="id45">
+			<source ref="id41"/>
+			<target ref="id44"/>
+			<label kind="guard" x="-1147" y="-68">true</label>
+			<label kind="synchronisation" x="-1181" y="-42">logoutRequest!</label>
+		</transition>
+		<transition id="id46">
+			<source ref="id37"/>
+			<target ref="id41"/>
+			<label kind="guard" x="-969" y="68">true</label>
+			<nail x="-1054" y="102"/>
+		</transition>
+		<transition id="id47">
+			<source ref="id44"/>
+			<target ref="id35"/>
+			<label kind="synchronisation" x="-1555" y="-225">started?</label>
+		</transition>
+		<transition id="id48">
+			<source ref="id43"/>
+			<target ref="id37"/>
+			<label kind="guard" x="-714" y="-246">true</label>
+			<label kind="synchronisation" x="-773" y="-229">scholarshipDecision?</label>
+			<nail x="-892" y="-221"/>
+		</transition>
+		<transition id="id49">
+			<source ref="id42"/>
+			<target ref="id37"/>
+			<label kind="guard" x="-1121" y="-488">true</label>
+			<label kind="synchronisation" x="-1164" y="-467">scholarshipDecision?</label>
+			<nail x="-1139" y="-467"/>
+		</transition>
+		<transition id="id50">
+			<source ref="id38"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-629" y="-314">scholarshipApplyMCN!</label>
+			<label kind="assignment" x="-671" y="-297">isScholarshipApplied=true</label>
+		</transition>
+		<transition id="id51">
+			<source ref="id38"/>
+			<target ref="id42"/>
+			<label kind="synchronisation" x="-552" y="-399">scholarshipApplyMerit!</label>
+			<label kind="assignment" x="-569" y="-382">isScholarshipApplied=true</label>
+			<nail x="-341" y="-437"/>
+			<nail x="-341" y="-437"/>
+			<nail x="-341" y="-437"/>
+		</transition>
+		<transition id="id52">
+			<source ref="id40"/>
+			<target ref="id37"/>
+			<label kind="guard" x="-884" y="-93">true</label>
+			<nail x="-901" y="-93"/>
+		</transition>
+		<transition id="id53">
+			<source ref="id37"/>
+			<target ref="id40"/>
+			<label kind="guard" x="-926" y="-59">true</label>
+			<label kind="synchronisation" x="-952" y="-51">personalInfoRequest!</label>
+			<nail x="-943" y="-51"/>
+		</transition>
+		<transition id="id54" color="#ff0000">
+			<source ref="id39"/>
+			<target ref="id37"/>
+			<label kind="guard" x="-901" y="-195">true</label>
+			<nail x="-960" y="-187"/>
+		</transition>
+		<transition id="id55" color="#00ff00">
+			<source ref="id37"/>
+			<target ref="id39"/>
+			<label kind="guard" x="-901" y="-161">true</label>
+			<label kind="synchronisation" x="-935" y="-153">transcriptRequest!</label>
+		</transition>
+		<transition id="id56" color="#ff0000">
+			<source ref="id38"/>
+			<target ref="id37"/>
+			<label kind="guard" x="-1044" y="-386">true</label>
+			<nail x="-1062" y="-348"/>
+		</transition>
+		<transition id="id57" color="#00ff00">
+			<source ref="id37"/>
+			<target ref="id38"/>
+			<label kind="guard" x="-1011" y="-297">isScholarshipApplied == false</label>
+		</transition>
+		<transition id="id58" color="#00ff00">
+			<source ref="id36"/>
+			<target ref="id37"/>
+			<label kind="synchronisation" x="-1283" y="-136">loginResponse!</label>
+		</transition>
+		<transition id="id59" color="#00ff00">
+			<source ref="id35"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="-1521" y="-136">loginRequest?</label>
+		</transition>
+	</template>
+	<system>//System declarations:
+Process = User() ;
+system Process, TranscriptInfo , Website, ScholarshipComm , CredentialChecker;</system>
+	<queries>
+		<query>
+			<formula>E[]ScholarshipComm.scholarshipApplied</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2024-11-29 00:00:48 +0530">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt;ScholarshipComm.Idle imply ScholarshipComm.scholarshipApplied</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-29 00:01:36 +0530">
+			</result>
+		</query>
+		<query>
+			<formula>E[]CredentialChecker.Verifying imply (!CredentialChecker.is_authenticated ||CredentialChecker.is_authenticated)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-11-29 00:04:45 +0530">
+			</result>
+		</query>
+		<query>
+			<formula>A[] (!deadlock</formula>
+			<comment/>
+		</query>
+	</queries>
+</nta>
