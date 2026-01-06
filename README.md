@@ -1,4 +1,4 @@
-```markdown
+
 # 🎓 Scholarship Application Portal - UPPAAL Model
 
 ## 📋 Overview
@@ -228,4 +228,3 @@ This educational project is developed for academic purposes as part of CS F214 a
 <div align="center">
   <strong>🔐 Secure • 🎯 Verified • 🚀 Scalable</strong>
 </div>
-```
