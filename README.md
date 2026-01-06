@@ -1,181 +1,231 @@
-Scholarship Application Portal - UPPAAL Model 
+```markdown
+# 🎓 Scholarship Application Portal - UPPAAL Model
 
-📋 Project Overview
-The Scholarship Application Portal is a formal model designed to simulate interactions between users and a scholarship portal system. The model ensures secure authentication, prevents multiple scholarship applications per session, and handles interactions with external components including credential verification, scholarship communication, and transcript information systems.
+## 📋 Overview
+A formal verification model for a Scholarship Application Portal developed in UPPAAL, simulating secure user authentication, scholarship application processing, and academic data management with verified safety and liveness properties.
 
-🏗️ Key Components
-1. Website Model
-Handles user interactions including:
+---
 
-User login and logout
+## 🏗️ System Architecture
 
-Homepage navigation
+### 🔄 Component Overview
+```mermaid
+graph TD
+    A[User] --> B[Website Model]
+    B --> C{CredentialChecker}
+    C -->|Authentication| D[ScholarshipComm]
+    B --> E[TranscriptInfo]
+    D -->|Decision| B
+    E -->|Data| B
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+```
 
-Scholarship application process
+### 📦 Core Components
 
-Separation between Merit Scholarship and Merit-Cum-Need Scholarship
+#### 1. **Website Model** 🌐
+- Handles user session management
+- Implements login/logout workflows
+- Manages scholarship application flow
+- Prevents multiple applications per session
+- **States:** `login`, `homepage`, `applyScholarship`, `logout`
 
-Prevention of multiple scholarship applications per session
+#### 2. **CredentialChecker Model** 🔐
+- Authenticates unique users (ID + password)
+- Prevents duplicate logins globally
+- **States:** `Waiting`, `Verifying`, `Success`
+- **Key Property:** Ensures one active user per session
 
-2. CredentialChecker Model
-Authenticates users based on unique IDs and passwords
+#### 3. **ScholarshipComm Model** 📑
+- Evaluates scholarship eligibility:
+  - **Merit Scholarship:** CGPA ≥ 7.0
+  - **Merit-Cum-Need:** CGPA ≥ 6.0
+- Default test CGPA: 8.0
+- **States:** `EvaluatingMerit`, `EvaluatingMCN`, `Approved`, `Rejected`
+- Synchronizes application states
 
-Tracks authenticated users globally to prevent duplicate logins
+#### 4. **TranscriptInfo Model** 📊
+- Handles academic data requests
+- Simulates academic server integration
+- Provides fallback for missing data
 
-States: Waiting, Verifying
+---
 
-Uses integer credentials for modeling simplicity
+## ⚙️ Technical Specifications
 
-3. ScholarshipComm Model
-Evaluates scholarship eligibility based on CGPA thresholds:
-
-MCN Scholarship: Minimum CGPA ≥ 6
-
-Merit Scholarship: Minimum CGPA ≥ 7
-
-Processes scholarship requests and communicates decisions
-
-Uses default CGPA = 8 for verification
-
-Synchronizes with website to prevent multiple applications
-
-Automatically redirects to idle/waiting after processing
-
-4. TranscriptInfo Model
-Handles requests for academic transcripts and personal information
-
-Generates data based on user information from academic server
-
-Includes fallback state for missing information
-
-5. User Model
-Simple model for user interactions with the website
-
-⚙️ Technical Implementation
-System Declarations
-uppaal
-// System declarations
+### 🔧 System Declarations
+```uppaal
+// System Configuration
 Process = Website();
 system Process, TranscriptInfo, ScholarshipComm, CredentialChecker;
 
-// Channels
-chan scholarshipDecision, scholarshipApplyMerit, transcriptRequest, 
-     personalInfoRequest, loginRequest, loginResponse, logoutRequest, 
+// Communication Channels
+chan scholarshipDecision, scholarshipApplyMerit, transcriptRequest,
+     personalInfoRequest, loginRequest, loginResponse, logoutRequest,
      scholarshipApplyMCN;
 
-// Global variables
+// Global Variables
 int scholarship_approved = 0;
-✅ Verified Properties
-Liveness Properties
-Scholarship Approval Path: E<> ScholarshipComm.Approved ✓ TRUE
+```
 
-Authentication Success Path: E<> CredentialChecker.Success ✓ TRUE
+### 🎯 Scholarship Eligibility Matrix
+| Scholarship Type | Minimum CGPA | Processing State |
+|-----------------|-------------|------------------|
+| Merit Scholarship | ≥ 7.0 | `EvaluatingMerit` |
+| Merit-Cum-Need | ≥ 6.0 | `EvaluatingMCN` |
 
-State Consistency: A<> CredentialChecker.Verifying imply CredentialChecker.Waiting ✓ TRUE
+---
 
-Application Completion: E<> ScholarshipComm.Idle imply ScholarshipComm.scholarshipApplied ✓ TRUE
+## ✅ Model Verification
 
-Login Verification: Website.login --> CredentialChecker.Verifying ✓ TRUE
+### 🟢 **Liveness Properties Verified**
+| Property | Description | Status |
+|----------|-------------|--------|
+| **L1** | `E<> ScholarshipComm.Approved` | ✅ **TRUE** |
+| **L2** | `E<> CredentialChecker.Success` | ✅ **TRUE** |
+| **L3** | `A<> CredentialChecker.Verifying → CredentialChecker.Waiting` | ✅ **TRUE** |
+| **L4** | `E<> ScholarshipComm.Idle → scholarshipApplied` | ✅ **TRUE** |
+| **L5** | `Website.login → CredentialChecker.Verifying` | ✅ **TRUE** |
+| **L6** | `E<> (ScholarshipComm.Approved || Rejected)` | ✅ **TRUE** |
 
-Decision Path: E<> (ScholarshipComm.Approved || ScholarshipComm.Rejected) ✓ TRUE
+### 🛡️ **Safety Properties Verified**
+| Property | Description | Status |
+|----------|-------------|--------|
+| **S1** | `A[] !deadlock` | ✅ **TRUE** |
+| **S2** | `E[] ScholarshipComm.EvaluatingMerit → scholarshipApplied` | ✅ **TRUE** |
+| **S3** | `A[] CredentialChecker.Verifying → CredentialChecker.Waiting` | ❌ **FALSE** |
+| **S4** | `E[] ScholarshipComm.scholarshipApplied` | ❌ **FALSE** |
+| **S5** | `E[] CredentialChecker.Verifying → is_authenticated` | ✅ **TRUE** |
+| **S6** | `E[] CredentialChecker.Verifying → (!is_authenticated || is_authenticated)` | ✅ **TRUE** |
 
-Safety Properties
-Deadlock Freedom: A[] !deadlock ✓ TRUE
+---
 
-Application State: E[] ScholarshipComm.EvaluatingMerit imply ScholarshipComm.scholarshipApplied ✓ TRUE
+## 🧮 Assumptions & Constraints
 
-Verification State: A[] CredentialChecker.Verifying imply CredentialChecker.Waiting ✗ FALSE
+### 🔐 **Security Assumptions**
+1. Each user has unique credentials (ID + password)
+2. Authentication occurs via external server
+3. Single active session per user
+4. No concurrent multi-device logins
 
-Persistent Application: E[] ScholarshipComm.scholarshipApplied ✗ FALSE
+### ⚡ **System Constraints**
+1. One active user at a time
+2. Default CGPA = 8.0 for testing
+3. Immediate server responses (no delays)
+4. Transcript data assumed available
 
-Authentication Consistency: E[] CredentialChecker.Verifying imply CredentialChecker.is_authenticated ✓ TRUE
+### 📊 **Data Assumptions**
+```json
+{
+  "test_user": {
+    "id": "unique_integer",
+    "password": "integer_hash",
+    "cgpa": 8.0,
+    "transcript_available": true,
+    "personal_info_available": true
+  }
+}
+```
 
-Authentication Outcome: E[] CredentialChecker.Verifying imply (!CredentialChecker.is_authenticated || CredentialChecker.is_authenticated) ✓ TRUE
+---
 
-🧪 Assumptions
-Each user has a unique ID and valid credentials
+## 🚀 Getting Started
 
-Authentication server verifies all credentials
+### **Prerequisites**
+- UPPAAL 4.0+ (Download from [uppaal.org](http://uppaal.org))
+- Basic understanding of timed automata
+- XML model file (`scholarship_portal.xml`)
 
-No support for multiple device sessions per user
+### **Installation & Usage**
+```bash
+# 1. Launch UPPAAL
+# 2. Load the model XML file
+# 3. Verify properties in Verifier tab
+# 4. Simulate workflows in Simulator tab
+```
 
-State synchronization ensures consistent user actions
+### **Verification Commands**
+```uppaal
+// Example verification queries
+E<> ScholarshipComm.Approved
+A[] !deadlock
+E[] CredentialChecker.Verifying imply CredentialChecker.is_authenticated
+```
 
-Immediate server responses (no delays modeled)
+---
 
-Only one user active at a time
+## 📈 Model Features
 
-Default values used for modeling:
+### **🛡️ Security Features**
+- ✅ Unique user authentication
+- ✅ Session state management
+- ✅ Prevention of duplicate applications
+- ✅ Secure credential verification
 
-Email, password, CGPA = 8
+### **📋 Workflow Management**
+- ✅ Separate scholarship pathways
+- ✅ CGPA-based eligibility checks
+- ✅ Automatic state transitions
+- ✅ Consistent session handling
 
-Transcript and personal information exist unless specified otherwise
+### **🔍 Verification Coverage**
+- ✅ Deadlock-free operation
+- ✅ Reachability of critical states
+- ✅ State consistency checks
+- ✅ Property satisfaction analysis
 
-No visual output (pure state transition model)
+---
 
-🚀 How to Run
-Prerequisites
-UPPAAL 4.0 or higher
+## 📊 Results Summary
 
-XML model file
+### **✅ Successful Verifications**
+- All liveness properties satisfied (6/6)
+- Critical safety properties maintained
+- No deadlocks in system
+- Consistent state transitions
 
-Steps
-Import the XML model file into UPPAAL
+### **⚠️ Notable Findings**
+- Property S3 evaluates to FALSE - Verifying state doesn't always imply Waiting
+- Property S4 evaluates to FALSE - scholarshipApplied not persistent globally
+- System supports safe concurrency model
 
-Ensure system declarations are set as specified above
+---
 
-Verify properties in the "Verifier" tab
+## 🔮 Future Enhancements
 
-Simulate the model to trace state transitions
+### **🔄 Planned Extensions**
+1. **Multi-user Support** - Concurrent user sessions
+2. **Real-time Delays** - Network latency modeling
+3. **Extended Scholarship Types** - Additional criteria
+4. **Enhanced UI Simulation** - Visual state representation
+5. **Database Integration** - Persistent data storage
 
-Model Files
-scholarship_portal.xml - Main UPPAAL model
+### **🔧 Technical Improvements**
+- Add clock variables for timeout modeling
+- Implement priority-based scheduling
+- Include error recovery mechanisms
+- Add logging and audit trails
 
-(Optional test cases with name, email, password, CGPA)
+---
 
-📈 Model Features
-Security
-Unique user authentication
+## 📄 License & Usage
+This educational project is developed for academic purposes as part of CS F214 at BITS Pilani. The model is intended for learning and research in formal verification methods.
 
-Prevention of duplicate logins
+---
 
-Session management
+## 📚 References
+1. UPPAAL Documentation - [uppaal.org/documentation](http://uppaal.org/documentation)
+2. Timed Automata Theory
+3. Formal Verification in Software Engineering
+4. Model Checking Principles
 
-Scholarship Processing
-Separate merit and merit-cum-need pathways
+---
 
-CGPA-based eligibility checks
-
-Single application per session restriction
-
-Data Management
-Transcript information retrieval
-
-Personal data access
-
-Fallback mechanisms for missing data
-
-🔍 Verification Results
-The model successfully verifies:
-
-Safety: No deadlocks, consistent state transitions
-
-Liveness: Critical states are reachable
-
-Functional Correctness: Proper workflow from login to scholarship decision
-
-📝 Conclusion
-This UPPAAL model effectively simulates a Scholarship Application Portal with robust security and workflow management. The modular design allows for future extensions including:
-
-Multiple simultaneous user sessions
-
-Real-world delay integration
-
-Additional scholarship types
-
-Enhanced security features
-
-The verification of key safety and liveness properties ensures the model's correctness and reliability for real-world implementation.
-
-📄 License
-Educational project for BITS Pilani course CS F214
+<div align="center">
+  <strong>🔐 Secure • 🎯 Verified • 🚀 Scalable</strong>
+</div>
+```
